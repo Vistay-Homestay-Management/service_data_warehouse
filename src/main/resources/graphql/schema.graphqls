@@ -1,0 +1,9 @@
+type Query {
+  warehouseServiceInfo: WarehouseServiceInfo!
+}
+
+type WarehouseServiceInfo {
+  name: String!
+  version: String!
+}
+
