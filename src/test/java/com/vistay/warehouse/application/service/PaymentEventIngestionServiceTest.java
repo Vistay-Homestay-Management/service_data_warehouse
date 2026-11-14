@@ -18,7 +18,6 @@ import com.vistay.warehouse.domain.model.IngestionCheckpoint;
 import com.vistay.warehouse.domain.model.ProcessedEvent;
 import com.vistay.warehouse.domain.repository.DataQualityIssueRepository;
 import com.vistay.warehouse.domain.repository.DimDateRepository;
-import com.vistay.warehouse.domain.repository.FactBookingRepository;
 import com.vistay.warehouse.domain.repository.FactFinancialTransactionRepository;
 import com.vistay.warehouse.domain.repository.IngestedEventRepository;
 import com.vistay.warehouse.domain.repository.IngestionCheckpointRepository;
@@ -37,7 +36,6 @@ class PaymentEventIngestionServiceTest {
 
     private JsonMapper objectMapper;
     private FactFinancialTransactionRepository transactions;
-    private FactBookingRepository bookings;
     private DimDateRepository dates;
     private ProcessedEventRepository processedEvents;
     private IngestedEventRepository ingestedEvents;
@@ -49,7 +47,6 @@ class PaymentEventIngestionServiceTest {
     void setUp() {
         objectMapper = JsonMapper.builder().build();
         transactions = mock(FactFinancialTransactionRepository.class);
-        bookings = mock(FactBookingRepository.class);
         dates = mock(DimDateRepository.class);
         processedEvents = mock(ProcessedEventRepository.class);
         ingestedEvents = mock(IngestedEventRepository.class);
@@ -67,10 +64,8 @@ class PaymentEventIngestionServiceTest {
         lenient().when(checkpoints.findBySourceNameAndPartitionKey(any(), any())).thenReturn(Optional.empty());
         lenient().when(checkpoints.save(any(IngestionCheckpoint.class))).thenAnswer(inv -> inv.getArgument(0));
         lenient().when(dataQualityIssues.save(any(DataQualityIssue.class))).thenAnswer(inv -> inv.getArgument(0));
-        lenient().when(bookings.findById(any(UUID.class))).thenReturn(Optional.empty());
-
         service = new PaymentEventIngestionService(
-                objectMapper, transactions, bookings, dates,
+                objectMapper, transactions, dates,
                 processedEvents, ingestedEvents, checkpoints, dataQualityIssues);
     }
 
@@ -113,7 +108,7 @@ class PaymentEventIngestionServiceTest {
         FactFinancialTransaction fact = captor.getValue();
 
         assertThat(fact.getTransactionId()).isEqualTo(providerTxId);
-        assertThat(fact.getBookingId()).isEqualTo(paymentIntentId);
+        assertThat(fact.getBookingId()).isNull();
         assertThat(fact.getTransactionType()).isEqualTo("PAYMENT");
         assertThat(fact.getPaymentMethod()).isEqualTo("VIETQR");
         assertThat(fact.getProvider()).isEqualTo("NAPAS247");

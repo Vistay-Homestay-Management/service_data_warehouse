@@ -2,14 +2,12 @@ package com.vistay.warehouse.application.service;
 
 import com.vistay.warehouse.domain.model.DataQualityIssue;
 import com.vistay.warehouse.domain.model.DimDate;
-import com.vistay.warehouse.domain.model.FactBooking;
 import com.vistay.warehouse.domain.model.FactFinancialTransaction;
 import com.vistay.warehouse.domain.model.IngestedEvent;
 import com.vistay.warehouse.domain.model.IngestionCheckpoint;
 import com.vistay.warehouse.domain.model.ProcessedEvent;
 import com.vistay.warehouse.domain.repository.DataQualityIssueRepository;
 import com.vistay.warehouse.domain.repository.DimDateRepository;
-import com.vistay.warehouse.domain.repository.FactBookingRepository;
 import com.vistay.warehouse.domain.repository.FactFinancialTransactionRepository;
 import com.vistay.warehouse.domain.repository.IngestedEventRepository;
 import com.vistay.warehouse.domain.repository.IngestionCheckpointRepository;
@@ -41,7 +39,6 @@ public class PaymentEventIngestionService {
 
     private final ObjectMapper objectMapper;
     private final FactFinancialTransactionRepository transactions;
-    private final FactBookingRepository bookings;
     private final DimDateRepository dates;
     private final ProcessedEventRepository processedEvents;
     private final IngestedEventRepository ingestedEvents;
@@ -51,7 +48,6 @@ public class PaymentEventIngestionService {
     public PaymentEventIngestionService(
             ObjectMapper objectMapper,
             FactFinancialTransactionRepository transactions,
-            FactBookingRepository bookings,
             DimDateRepository dates,
             ProcessedEventRepository processedEvents,
             IngestedEventRepository ingestedEvents,
@@ -59,7 +55,6 @@ public class PaymentEventIngestionService {
             DataQualityIssueRepository dataQualityIssues) {
         this.objectMapper = objectMapper;
         this.transactions = transactions;
-        this.bookings = bookings;
         this.dates = dates;
         this.processedEvents = processedEvents;
         this.ingestedEvents = ingestedEvents;
@@ -165,7 +160,6 @@ public class PaymentEventIngestionService {
             currency = "VND";
         }
         String occurredAtStr = textOrNull(data, "occurredAt");
-        String paymentIntentIdStr = textOrNull(data, "paymentIntentId");
 
         if (providerTxStr == null || amountStr == null) {
             recordDataQualityIssue(eventId.toString(), "MISSING_MANDATORY_FIELDS", "ERROR",
@@ -216,13 +210,10 @@ public class PaymentEventIngestionService {
             }
         }
 
+        // paymentIntentId identifies a Payment aggregate, not a Booking. Event v1
+        // does not carry bookingId, so leave the conformed booking relationship
+        // unresolved rather than corrupting the fact with a foreign identifier.
         UUID bookingId = null;
-        if (paymentIntentIdStr != null && !paymentIntentIdStr.isBlank()) {
-            try {
-                bookingId = UUID.fromString(paymentIntentIdStr);
-            } catch (IllegalArgumentException ignored) {
-            }
-        }
 
         // Stale check for transaction
         Optional<FactFinancialTransaction> existingTx = transactions.findById(transactionId);
@@ -255,15 +246,6 @@ public class PaymentEventIngestionService {
         fact.setTransactionDate(transactionDate);
         fact.setSourceEventId(eventId);
         fact.setSourceUpdatedAt(occurredAt);
-
-        // Link property/customer if linked booking is available
-        if (bookingId != null && bookings != null) {
-            Optional<FactBooking> linkedBooking = bookings.findById(bookingId);
-            if (linkedBooking.isPresent()) {
-                fact.setProperty(linkedBooking.get().getProperty());
-                fact.setCustomer(linkedBooking.get().getCustomer());
-            }
-        }
 
         transactions.save(fact);
 
