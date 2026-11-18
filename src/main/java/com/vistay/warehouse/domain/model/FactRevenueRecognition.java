@@ -7,6 +7,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
@@ -36,7 +38,8 @@ public class FactRevenueRecognition {
     @Column(name = "recognized_amount", nullable = false, precision = 19, scale = 4)
     private BigDecimal recognizedAmount;
 
-    @Column(name = "currency", nullable = false, columnDefinition = "char(3)")
+    @JdbcTypeCode(SqlTypes.CHAR)
+    @Column(name = "currency", nullable = false, length = 3, columnDefinition = "char(3)")
     private String currency;
 
     @Column(name = "source_event_id")

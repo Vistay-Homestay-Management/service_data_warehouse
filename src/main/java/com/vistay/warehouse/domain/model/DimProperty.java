@@ -27,9 +27,6 @@ public class DimProperty {
     @Column(name = "property_name", nullable = false, length = 180)
     private String propertyName;
 
-    @Column(name = "property_type", length = 32)
-    private String propertyType;
-
     @Column(name = "building_id")
     private UUID buildingId;
 
@@ -107,10 +104,6 @@ public class DimProperty {
 
     public String getPropertyName() {
         return propertyName;
-    }
-
-    public String getPropertyType() {
-        return propertyType;
     }
 
     public UUID getBuildingId() {
