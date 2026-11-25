@@ -6,6 +6,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.UUID;
@@ -22,7 +24,8 @@ public class DimCustomerMasked {
     @Column(name = "customer_id", nullable = false, unique = true)
     private UUID customerId;
 
-    @Column(name = "nationality_code", columnDefinition = "char(3)")
+    @JdbcTypeCode(SqlTypes.CHAR)
+    @Column(name = "nationality_code", length = 3, columnDefinition = "char(3)")
     private String nationalityCode;
 
     @Column(name = "age_band", length = 16)

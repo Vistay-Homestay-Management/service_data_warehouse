@@ -4,6 +4,8 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -45,7 +47,8 @@ public class IngestedEvent {
     @Column(name = "payload", nullable = false, columnDefinition = "jsonb")
     private String payload;
 
-    @Column(name = "payload_sha256", nullable = false, columnDefinition = "char(64)")
+    @JdbcTypeCode(SqlTypes.CHAR)
+    @Column(name = "payload_sha256", nullable = false, length = 64, columnDefinition = "char(64)")
     private String payloadSha256;
 
     @Column(name = "processing_status", nullable = false, length = 24)
